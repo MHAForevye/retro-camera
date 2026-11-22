@@ -1,15 +1,33 @@
 # RETRO CAMERA
-Vintage Analog, tarayıcı tabanlı retro kamera uygulaması (statik HTML/CSS/JS, derleme gerekmez).
+*A moment from another time.* — Tarayıcı tabanlı retro kamera uygulaması. Statik HTML/CSS/JS, derleme gerekmez, harici kütüphane yok. PWA: ana ekrana eklenir, çevrimdışı çalışır.
 
-## GitHub Pages
-1. Repoya tüm dosyaları yükle → Settings → Pages → Branch: `main` / root.
-2. Kamera için HTTPS gerekir (GitHub Pages HTTPS sunar).
+## Yayınlama
+GitHub Pages / Netlify / Cloudflare Pages: tüm dosyaları yükle. Kamera için HTTPS gerekir (hepsi HTTPS sunar).
 
-## Bu sürümde (Faz 1–2 + FOREVYE iskeleti)
-- 5 ücretsiz kamera, sabit profiller (`js/cameras.js`), kullanıcı efekt ayarı yok; her fotoğraf profil sürümünü saklar
-- İzinli kamera, ön/arka, fener, deklanşör, baskı (tam kare / beyaz çerçeve / photo booth şeridi)
-- My Album / My Archive (IndexedDB, özel, cihazda), albüm oluştur/yeniden adlandır, indir, sil
-- Premium ekranı + `js/forevye-adapter.js`: kristal/premium yalnızca merkezi API ile; `API_BASE` boşken satın alma kapalı, sahte bakiye yok
+## Ücretsiz
+- 5 kamera (sabit profiller, `js/cameras.js`), ön/arka kamera (ön kamera aynalı), fener, zamanlayıcı (3/10 sn), deklanşör sesi
+- Baskı düzenleri: tam kare / beyaz çerçeve / photo booth şeridi
+- My Album: favoriler, albümler (3 adet), fotoğraf görüntüleyici (ok tuşları), indir, **paylaş** (cihazın paylaşım menüsü), sil
+- My Archive: 200 MB cihaz arşivi, **ZIP yedek**; veri yalnızca cihazda kalır
+
+## Premium (kristal ile, süreli, otomatik yenilenmez)
+- **Extended Archive:** 2 GB
+- **Premium Albums:** sınırsız albüm + albüm kapağı + kapaklı albüm kartları
+- **Premium Collections:** Film şeridi, Siyah pasparto, Tarih damgası çerçeveleri
+- **Photo Book:** albüm/fotoğraflardan A4 PDF fotokitap (en fazla 60 foto)
+- Premium bitince fotoğraflar silinmez; yalnızca yeni kayıt sınırları ücretsiz seviyeye döner.
+
+## FOREVYE bağlantısı
+`js/forevye-adapter.js` içinde `API_BASE` doldur. Beklenen uçlar:
+`GET /api/premium/catalog`, `GET /api/premium/status` → `{active, expires_at}`, `POST /api/premium/purchase` (Idempotency-Key ile).
+`API_BASE` boşken satın alma kapalıdır; yerelde bakiye/premium üretilmez.
+
+**Satış önizlemesi:** `API_BASE` boşken `#/settings?demo` adresinde gizli bir "Premium önizleme" anahtarı çıkar (yalnızca müşteriye özellikleri göstermek için). API bağlanınca otomatik devre dışı kalır.
+
+## Teknik notlar
+- Veri: IndexedDB v2 (blob'lar ayrı depoda). v1 verisi ilk açılışta otomatik taşınır.
+- Limitler `js/app.js` başında `LIM`, çerçeveler `FRAMES`; kamera profilleri `js/cameras.js`.
+- Sürüm önbelleği: `sw.js` içindeki `V` değerini her yayında artır.
 
 ## Sonraki adımlar (arka uç gerektirir)
-Token tabanlı paylaşım, bulut arşivi, FOREVYE Auth/Wallet/Ledger/Entitlement, Cloudflare Workers + D1 + R2 (şartname §11–12).
+Token tabanlı paylaşım bağlantıları, bulut arşivi, FOREVYE Auth/Wallet/Ledger/Entitlement (Cloudflare Workers + D1 + R2).

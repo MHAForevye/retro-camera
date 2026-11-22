@@ -1,16 +1,24 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>RETRO CAMERA — A moment from another time.</title>
+<meta name="description" content="Retro kameralarla çek, baskıya dönüştür. Fotoğrafların yalnızca senin cihazında kalır.">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#7a4b2a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
 </head><body>
 <header><a href="#/" class="logo">RETRO CAMERA</a>
-<nav id="nav"><a href="#/">Home</a><a href="#/camera">Camera</a><a href="#/album">My Album</a><a href="#/archive">My Archive</a><a href="#/premium">Premium</a><a href="#/settings">Settings</a></nav></header>
-<main id="view"></main>
-<div id="modal" hidden></div>
-<footer>RETRO CAMERA · Sürüm 1.0 · A moment from another time.</footer>
+<nav id="nav"><a href="#/">Home</a><a href="#/catalog">Catalog</a><a href="#/camera">Camera</a><a href="#/album">My Album</a><a href="#/archive">My Archive</a><a href="#/premium">Premium</a><a href="#/settings">Settings</a></nav>
+<a id="pb" class="pb" href="#/premium">Ücretsiz</a></header>
+<main id="view" aria-live="polite"></main>
+<div id="modal" hidden role="dialog" aria-modal="true"></div>
+<dialog id="dlg"></dialog><div id="toast" role="status"></div>
+<footer>RETRO CAMERA · Sürüm 2.0 · A moment from another time.</footer>
 <script src="js/cameras.js"></script>
+<script src="js/util.js"></script>
 <script src="js/forevye-adapter.js"></script>
 <script src="js/app.js"></script>
 </body></html>
