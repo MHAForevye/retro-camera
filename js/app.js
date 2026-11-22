@@ -8,6 +8,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const url=b=>{const u=URL.createObjectURL(b);urls.push(u);return u};
 const cam=id=>CAMERAS.find(c=>c.id===id)||CAMERAS[0];
 const fmt=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':n>1048576?(n/1048576).toFixed(1)+' MB':Math.round(n/1024)+' KB';
+/* SVG ikon seti (çizgi stili, currentColor — emoji yok) */
+const IC={lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',star:'<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
+ heart:'<path d="M12 19.5s-7-4.3-7-9.6A4 4 0 0 1 12 7.4a4 4 0 0 1 7 2.5c0 5.3-7 9.6-7 9.6z"/>',book:'<path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5z"/><path d="M5 20.5A2.5 2.5 0 0 0 7.5 21H19v-3"/>',
+ chevL:'<path d="M14.5 5.5L8 12l6.5 6.5"/>',chevR:'<path d="M9.5 5.5L16 12l-6.5 6.5"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',rec:'<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/>',
+ down:'<path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 20h14"/>',share:'<circle cx="6" cy="12" r="2.4"/><circle cx="17.5" cy="6" r="2.4"/><circle cx="17.5" cy="18" r="2.4"/><path d="M8.2 10.9l7.1-3.7M8.2 13.1l7.1 3.7"/>',
+ trash:'<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7M10 11v5M14 11v5"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>',stack:'<rect x="4" y="9" width="16" height="11" rx="2"/><path d="M7 6h10M9.5 3h5"/>',disk:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',frame:'<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><rect x="7" y="8.5" width="10" height="7"/>'};
+const ic=(n,c='')=>`<svg class="i ${c}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const LK=ic('lock','lk');
 const specs=c=>[c.flash?'Flaşlı':'Flaşsız',c.frames?c.frames+' kare şerit':({full:'Tam kare',white:'Beyaz çerçeve',strip:'Şerit'})[c.layout]].join(' · ');
 
 /* ---------- Bildirim ve diyalog ---------- */
@@ -20,7 +28,7 @@ const P={on:false,exp:null,err:'',demo:LS.get('demo','0')==='1',ready:null,
  async load(){this.on=false;this.exp=null;this.err='';
   if(FOREVYE.configured){try{const s=await FOREVYE.status();this.on=!!(s.active??s.premium_active??s.is_premium);this.exp=s.expires_at||s.expires||null}catch(e){this.err=e.message}}
   else this.on=this.demo;
-  const b=$('#pb');b.textContent=this.on?'★ Premium':'Ücretsiz';b.className='pb'+(this.on?' on':'');return this.on},
+  const b=$('#pb');b.innerHTML=this.on?ic('star','fill')+' Premium':'Ücretsiz';b.className='pb'+(this.on?' on':'');return this.on},
  get mb(){return this.on?LIM.prem.mb:LIM.free.mb}};
 
 /* ---------- IndexedDB (özel yerel arşiv) — v2: blob'lar ayrı depoda, v1 verisi otomatik taşınır ---------- */
@@ -94,24 +102,24 @@ const routes={
   <div class="row"><a href="#/camera"><button class="pri">Hızlı çekim</button></a><a href="#/catalog"><button>Kamera kataloğu</button></a></div></div>${ICON}</section>
   <h2>Öne çıkan: ${esc(c.brand+' '+c.model)}</h2><p class="muted">${esc(c.category)} · ${c.era} · ${specs(c)}</p>
   <h2>Son fotoğraflar</h2>${ph.length?grid(ph.slice(0,8)):'<p class="muted">Henüz fotoğraf yok. İlk karenizi çekin.</p>'}
-  ${P.on?'':'<div class="note promo">★ <b>Premium</b> ile 2 GB arşiv, sınırsız albüm, kolleksiyon çerçeveleri ve PDF fotokitap. <a href="#/premium">İncele</a></div>'}`},
+  ${P.on?'':`<div class="note promo">${ic('star','fill')} <b>Premium</b> ile 2 GB arşiv, sınırsız albüm, kolleksiyon çerçeveleri ve PDF fotokitap. <a href="#/premium">İncele</a></div>`}`},
  '/catalog':()=>`<h1>Camera Catalog</h1><p class="muted">Tüm kameralar ücretsizdir.</p><div class="grid">${CAMERAS.map(camCard).join('')}</div>`,
  '/camera':()=>`<h1>Camera</h1><div class="grid" id="pick">${CAMERAS.map(camCard).join('')}</div>
   <div class="row"><label class="muted">Zamanlayıcı <select id="tm">${[0,3,10].map(s=>`<option value="${s}" ${s===timer?'selected':''}>${s?s+' sn':'Kapalı'}</option>`).join('')}</select></label></div>
-  <div class="row chips" id="frs"><span class="muted">Çerçeve:</span>${FRAMES.map(f=>`<button class="chip ${f.id===frame&&(f.free||P.on)?'on':''}" data-fr="${f.id}">${f.name}${f.free||P.on?'':' 🔒'}</button>`).join('')}</div>
+  <div class="row chips" id="frs"><span class="muted">Çerçeve:</span>${FRAMES.map(f=>`<button class="chip ${f.id===frame&&(f.free||P.on)?'on':''}" data-fr="${f.id}">${f.name}${f.free||P.on?'':LK}</button>`).join('')}</div>
   <div class="row"><button class="pri" id="start">Kamerayı aç</button><button id="flip" hidden>Ön/Arka</button><button id="torch" hidden>Fener</button></div>
   <p class="muted" id="msg">Kamera yalnızca sen izin verince açılır.</p>
   <div class="stage" id="stage" hidden><video id="vid" playsinline muted></video><div class="flash" id="fl"></div><div id="cnt"></div></div>
-  <div class="row" style="justify-content:center"><button class="pri" id="shot" hidden>● Çek</button></div><div id="res"></div>`,
+  <div class="row" style="justify-content:center"><button class="pri" id="shot" hidden>${ic('rec')} Çek</button></div><div id="res"></div>`,
  '/album':async()=>{const [ph,al]=await Promise.all([DB.all('photos'),DB.all('albums')]);
   const q=new URLSearchParams(location.hash.split('?')[1]||''),a=q.get('a')||'',s=q.get('s')||'date',f=q.get('f')==='1',A=al.find(x=>x.id===a);
   const list=ph.filter(p=>(!a||(A?.ids||[]).includes(p.id))&&(!f||p.fav)).sort((x,y)=>s==='cam'?x.cam.localeCompare(y.cam)||y.at-x.at:y.at-x.at);
   const cards=!a&&al.length?`<div class="grid albums">${al.map(x=>{const cv=ph.find(p=>p.id===(x.cover||x.ids[0]));return`<a class="card cam" href="#/album?a=${x.id}">${cv?`<img class="cov" src="${url(cv.thumb)}" alt="">`:'<div class="sw"></div>'}<h3>${esc(x.title)}</h3><small>${x.ids.length} fotoğraf</small></a>`}).join('')}</div>`:'';
   return`<h1>${A?esc(A.title):'My Album'}</h1><div class="row"><select id="fa"><option value="">Tüm fotoğraflar</option>${al.map(x=>`<option value="${x.id}" ${x.id===a?'selected':''}>${esc(x.title)}</option>`).join('')}</select>
   <select id="fs"><option value="date">Tarihe göre</option><option value="cam" ${s==='cam'?'selected':''}>Kameraya göre</option></select>
-  <label class="chip ${f?'on':''}"><input type="checkbox" id="ff" ${f?'checked':''} hidden>♥ Favoriler</label>
+  <label class="chip ${f?'on':''}"><input type="checkbox" id="ff" ${f?'checked':''} hidden>${ic('heart')} Favoriler</label>
   <button id="na">+ Albüm (${al.length}/${P.on?'∞':LIM.free.albums})</button>${A?'<button id="ra">Adı değiştir</button><button id="da">Albümü sil</button>':''}
-  <button id="bk">📖 Fotokitap${P.on?'':' 🔒'}</button></div>${cards}
+  <button id="bk">${ic('book')} Fotokitap${P.on?'':LK}</button></div>${cards}
   ${list.length?grid(list):'<p class="muted">Bu görünümde fotoğraf yok.</p>'}`},
  '/archive':async()=>{const ph=await DB.all('photos'),used=ph.reduce((n,p)=>n+(p.size||0)+(p.thumb?.size||0),0),lim=P.mb*1048576;
   let q='';try{const e=await navigator.storage.estimate();q=`<p class="muted">Tarayıcı kotası: ${fmt(e.usage)} / ${fmt(e.quota)}</p>`}catch{}
@@ -124,12 +132,12 @@ const routes={
  '/premium':async()=>{let body;
   if(!FOREVYE.configured)body=`<p class="note">FOREVYE merkezi servisi bağlı değil. Kristal bakiyesi ve premium yetkisi yerelde üretilmez; <code>js/forevye-adapter.js</code> içindeki <code>API_BASE</code> ayarlanınca paketler ve fiyatlar sunucudan okunur.</p>`;
   else try{const c=await FOREVYE.catalog();body=`<div class="grid">${c.map(p=>`<div class="card"><h3>${p.duration_hours/24} Günlük Premium</h3><p>${p.duration_hours} saat · ${p.crystal_price} kristal</p><button class="pri buy" data-c="${esc(p.package_code)}">Kristalle etkinleştir</button></div>`).join('')}</div>`}catch(e){body=`<p class="note">${esc(e.message)}</p>${e.status===401?'<button id="fv2">FOREVYE’yi bağla</button>':''}`}
-  const row=(a,b,c)=>`<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
+  const CK=ic('check','ok'),row=(a,b,c)=>`<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
   return`<h1>Premium</h1><p>3 günlük ve 7 günlük süreli erişim; yalnızca kristal ile, otomatik yenilenmez. Kamera modelleri ve temel çekim her zaman ücretsiz.</p>
-  <div class="card ${P.on?'okc':''}"><b>${P.on?'★ Premium aktif':'Premium aktif değil'}</b>${P.exp?`<p class="muted">Bitiş: ${new Date(P.exp).toLocaleString('tr-TR')}</p>`:''}${P.err?`<p class="muted">${esc(P.err)}</p>`:''}</div>
-  <div class="grid feat"><div class="card"><h3>📚 Premium Albums</h3><small>Sınırsız albüm, albüm kapağı seçimi, albüm kartları.</small></div><div class="card"><h3>💾 Extended Archive</h3><small>200 MB yerine 2 GB cihaz arşivi.</small></div>
-  <div class="card"><h3>🎞 Premium Collections</h3><small>Film şeridi, siyah pasparto ve tarih damgası çerçeveleri.</small></div><div class="card"><h3>📖 Photo Book</h3><small>Fotoğraf veya albümünüzden A4 PDF fotokitap.</small></div></div>
-  <div class="tw"><table class="tbl"><tr><th></th><th>Ücretsiz</th><th>Premium</th></tr>${row('Tüm kameralar','✓','✓')}${row('Arşiv alanı','200 MB','2 GB')}${row('Albüm sayısı','3','Sınırsız + kapak')}${row('Çerçeveler','Klasik','Klasik + 3 kolleksiyon')}${row('Fotokitap (PDF)','—','✓')}${row('ZIP yedek, paylaş, favoriler','✓','✓')}</table></div>
+  <div class="card ${P.on?'okc':''}"><b>${P.on?ic('star','fill')+' Premium aktif':'Premium aktif değil'}</b>${P.exp?`<p class="muted">Bitiş: ${new Date(P.exp).toLocaleString('tr-TR')}</p>`:''}${P.err?`<p class="muted">${esc(P.err)}</p>`:''}</div>
+  <div class="grid feat"><div class="card"><h3>${ic('stack')} Premium Albums</h3><small>Sınırsız albüm, albüm kapağı seçimi, albüm kartları.</small></div><div class="card"><h3>${ic('disk')} Extended Archive</h3><small>200 MB yerine 2 GB cihaz arşivi.</small></div>
+  <div class="card"><h3>${ic('frame')} Premium Collections</h3><small>Film şeridi, siyah pasparto ve tarih damgası çerçeveleri.</small></div><div class="card"><h3>${ic('book')} Photo Book</h3><small>Fotoğraf veya albümünüzden A4 PDF fotokitap.</small></div></div>
+  <div class="tw"><table class="tbl"><tr><th></th><th>Ücretsiz</th><th>Premium</th></tr>${row('Tüm kameralar',CK,CK)}${row('Arşiv alanı','200 MB','2 GB')}${row('Albüm sayısı','3','Sınırsız + kapak')}${row('Çerçeveler','Klasik','Klasik + 3 kolleksiyon')}${row('Fotokitap (PDF)','—',CK)}${row('ZIP yedek, paylaş, favoriler',CK,CK)}</table></div>
   <h2>Paketler</h2>${body}<p class="muted">Premium bitince fotoğraflar silinmez; sadece premium özellikler kapanır ve yeni kayıt sınırları ücretsiz seviyeye döner.</p>`},
  '/settings':()=>{const demo=/demo/.test(location.hash)&&!FOREVYE.configured;
   return`<h1>Profile / Settings</h1><div class="card"><h3>FOREVYE hesabı</h3><p class="muted">İsteğe bağlı. Şifren bu uygulamaya girilmez; güvenli yetkilendirme sayfasına yönlendirilirsin.</p><button id="fv">FOREVYE'yi bağla</button></div>
@@ -168,10 +176,10 @@ function bind(path){
  if(path==='/archive'&&$('#exp'))$('#exp').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Hazırlanıyor…';
   try{const ps=(await DB.all('photos')).sort((x,y)=>x.at-y.at),files=[];
    for(const[i,p]of ps.entries()){const x=await DB.get('blobs',p.id);if(x)files.push({name:`retro-${p.cam}-${new Date(p.at).toISOString().slice(0,10)}-${i+1}.jpg`,blob:x.blob})}
-   dl(await makeZip(files),'retro-camera-yedek.zip');toast('ZIP indirildi ✓')}catch(er){toast('Dışa aktarma başarısız: '+er.message)}
+   dl(await makeZip(files),'retro-camera-yedek.zip');toast('ZIP indirildi')}catch(er){toast('Dışa aktarma başarısız: '+er.message)}
   b.disabled=false;b.textContent='Tümünü ZIP olarak indir'};
  if(path==='/premium'){document.querySelectorAll('.buy').forEach(b=>b.onclick=async()=>{b.disabled=true;
-   try{await FOREVYE.purchase(b.dataset.c);P.ready=P.load();await P.ready;toast('Premium etkinleştirildi ★');render()}catch(e){toast(e.message)}b.disabled=false});
+   try{await FOREVYE.purchase(b.dataset.c);P.ready=P.load();await P.ready;toast('Premium etkinleştirildi');render()}catch(e){toast(e.message)}b.disabled=false});
   const f=$('#fv2');if(f)f.onclick=()=>FOREVYE.connect()}
  if(path==='/settings'){$('#fv').onclick=()=>{try{FOREVYE.connect()}catch(e){toast(e.message)}};
   $('#sn').onchange=e=>{snd=e.target.checked;LS.set('snd',snd?'1':'0')};
@@ -203,7 +211,7 @@ function bindCamera(){
   $('#res').innerHTML=`<div class="ph print" style="max-width:340px;margin:16px auto"><img src="${url(b)}" alt="Baskı"></div><div class="row" style="justify-content:center"><button class="pri" id="sv">Kaydet</button><button id="dlb">İndir</button><button id="shb">Paylaş</button><button id="rt">Yeniden çek</button></div>`;
   $('#sv').onclick=async()=>{const used=await usage();
    if(used+b.size+tb.size>P.mb*1048576)return toast(P.on?'Arşiv dolu. Eski fotoğrafları indirip sil.':'Ücretsiz arşiv (200 MB) dolu. Extended Archive için Premium’a geç.','#/'+(P.on?'archive':'premium'));
-   try{await DB.addPhoto({id:crypto.randomUUID(),cam:c.id,ver:c.version,at,size:b.size,thumb:tb,fav:false,frame:useF,w:out.width,h:out.height},b);$('#sv').disabled=true;$('#sv').textContent='Kaydedildi ✓'}
+   try{await DB.addPhoto({id:crypto.randomUUID(),cam:c.id,ver:c.version,at,size:b.size,thumb:tb,fav:false,frame:useF,w:out.width,h:out.height},b);$('#sv').disabled=true;$('#sv').innerHTML=ic('check')+' Kaydedildi'}
    catch(e){toast(e.name==='QuotaExceededError'?'Cihaz depolama alanı dolu.':'Kaydedilemedi: '+e.message)}};
   $('#dlb').onclick=()=>dl(b,`retro-${c.id}.jpg`);$('#shb').onclick=()=>share(b,`retro-${c.id}.jpg`);$('#rt').onclick=()=>{$('#res').innerHTML='';open()}}}
 
@@ -216,10 +224,10 @@ async function showPhoto(){
  const m=$('#modal'),c=cam(p.cam),A=new URLSearchParams(location.hash.split('?')[1]||'').get('a'),inA=A&&al.find(a=>a.id===A);
  if(vurl)URL.revokeObjectURL(vurl);vurl=URL.createObjectURL(x.blob);m.hidden=false;
  m.innerHTML=`<div class="box"><img src="${vurl}" alt=""><p class="muted">${esc(c.brand+' '+c.model)} · profil v${p.ver} · ${new Date(p.at).toLocaleString('tr-TR')} · ${fmt(p.size||x.blob.size)}</p>
- <div class="row"><button id="pv" ${vi?'':'disabled'} aria-label="Önceki">‹</button><span class="muted">${vi+1}/${vl.length}</span><button id="nx" ${vi<vl.length-1?'':'disabled'} aria-label="Sonraki">›</button>
- <button id="fav" aria-pressed="${!!p.fav}">${p.fav?'♥':'♡'}</button><button id="d">İndir</button><button id="sh">Paylaş</button><button id="x">Sil</button><button id="c">Kapat</button></div>
+ <div class="row"><button id="pv" ${vi?'':'disabled'} aria-label="Önceki">${ic('chevL')}</button><span class="muted">${vi+1}/${vl.length}</span><button id="nx" ${vi<vl.length-1?'':'disabled'} aria-label="Sonraki">${ic('chevR')}</button>
+ <button id="fav" aria-pressed="${!!p.fav}">${ic('heart',p.fav?'fill hot':'')}<span class="sr">${p.fav?'Favoriden çıkar':'Favori'}</span></button><button id="d">${ic('down')} İndir</button><button id="sh">${ic('share')} Paylaş</button><button id="x">${ic('trash')} Sil</button><button id="c">${ic('close')} Kapat</button></div>
  <div class="row"><select id="ad"><option value="">Albüme ekle…</option>${al.map(a=>`<option value="${a.id}">${esc(a.title)}</option>`).join('')}</select>
- ${inA?`<button id="rm">Albümden çıkar</button><button id="cv">Kapak yap${P.on?'':' 🔒'}</button>`:''}</div></div>`;
+ ${inA?`<button id="rm">Albümden çıkar</button><button id="cv">Kapak yap${P.on?'':LK}</button>`:''}</div></div>`;
  m.onclick=e=>{if(e.target===m)closeM()};$('#c').onclick=closeM;
  $('#pv').onclick=()=>{vi--;showPhoto()};$('#nx').onclick=()=>{vi++;showPhoto()};
  $("#fav").onclick=async()=>{p.fav=!p.fav;await DB.put('photos',p);showPhoto();render()};
@@ -238,5 +246,5 @@ async function book(ids,title){
  try{for(const id of ids.slice(0,60)){const[p,b]=await Promise.all([DB.get('photos',id),DB.get('blobs',id)]);if(!p||!b)continue;
    const bm=await createImageBitmap(b.blob),c=cam(p.cam);imgs.push({at:p.at,blob:b.blob,w:bm.width,h:bm.height,cap:`${c.brand} ${c.model}  -  ${new Date(p.at).toLocaleDateString('tr-TR')}`});bm.close?.()}
   imgs.sort((a,b)=>a.at-b.at);const f=new Date(imgs[0].at).toLocaleDateString('tr-TR'),l=new Date(imgs[imgs.length-1].at).toLocaleDateString('tr-TR');
-  dl(await makePDF(title,`${imgs.length} fotograf  |  ${f===l?f:f+' - '+l}`,imgs),'retro-fotokitap.pdf');toast('Fotokitap indirildi ✓'+(ids.length>60?' (ilk 60 fotoğraf)':''))
+  dl(await makePDF(title,`${imgs.length} fotograf  |  ${f===l?f:f+' - '+l}`,imgs),'retro-fotokitap.pdf');toast('Fotokitap indirildi'+(ids.length>60?' (ilk 60 fotoğraf)':''))
  }catch(e){toast('Fotokitap oluşturulamadı: '+e.message)}}
