@@ -57,3 +57,11 @@ button:not(.ph):not(.cam),.chip{display:inline-flex;align-items:center;justify-c
 .pb .i{width:.95em;height:.95em;vertical-align:-.15em}.promo .i{color:var(--copper)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .tbl td:nth-child(n+2),.tbl th:nth-child(n+2){text-align:center}
+
+/* kamera çizimleri */
+.sw.art{height:auto;aspect-ratio:8/5;display:block;border-radius:10px;margin-bottom:10px;overflow:hidden;background-image:radial-gradient(circle at 28% 18%,rgba(255,255,255,.32),transparent 62%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.sw.art .cart{display:block;width:100%;height:100%;transition:transform .2s}
+.cam:hover .cart{transform:translateY(-3px) scale(1.03)}.cam.sel .cart{transform:scale(1.04)}
+.feat-cam{max-width:320px}.feat-cam .sw{margin-bottom:6px}
+@media(min-width:700px){#pick,.grid:has(>.cam .art){grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}}
+@media(prefers-reduced-motion:reduce){.sw.art .cart{transition:none}}

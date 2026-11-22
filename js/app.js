@@ -95,12 +95,12 @@ async function share(b,n){const f=new File([b],n,{type:b.type||'image/jpeg'});
 /* ---------- Ekranlar ---------- */
 const ICON=`<svg class="hero-ic" viewBox="0 0 120 100" aria-hidden="true"><rect x="6" y="22" width="108" height="68" rx="12" fill="var(--brown)"/><rect x="6" y="48" width="108" height="42" rx="0" fill="var(--copper)" opacity=".35"/><rect x="22" y="12" width="26" height="14" rx="4" fill="var(--brown)"/><circle cx="60" cy="56" r="25" fill="var(--bg)"/><circle cx="60" cy="56" r="18" fill="#2a211a"/><circle cx="53" cy="49" r="5" fill="#fff" opacity=".5"/><circle cx="98" cy="36" r="5" fill="var(--bg)"/></svg>`;
 const grid=(l)=>`<div class="grid">${l.map(p=>`<button class="ph${p.fav?' f':''}" data-id="${p.id}"><img src="${url(p.thumb)}" alt="${esc(cam(p.cam).model)}"></button>`).join('')}</div>`;
-function camCard(c){return`<button class="card cam ${c.id===sel?'sel':''}" data-cam="${c.id}"><div class="sw" style="background:${c.sw}"></div><h3>${esc(c.brand+' '+c.model)}</h3><small>${esc(c.category)} · ${c.era}</small><small class="sp">${specs(c)}</small></button>`}
+function camCard(c){return`<button class="card cam ${c.id===sel?'sel':''}" data-cam="${c.id}"><div class="sw art" style="background-color:${c.sw}">${CAMART[c.id]||''}</div><h3>${esc(c.brand+' '+c.model)}</h3><small>${esc(c.category)} · ${c.era}</small><small class="sp">${specs(c)}</small></button>`}
 const routes={
  '/':async()=>{const ph=(await DB.all('photos')).sort((a,b)=>b.at-a.at),c=cam(sel);
   return`<section class="hero"><div><h1>A moment from another time.</h1><p>Bir kamera seç, çek; kameranın sabit karakteri baskıya dönüşsün. Ayar yok, filtre yok — sadece o kameranın görünümü.</p>
   <div class="row"><a href="#/camera"><button class="pri">Hızlı çekim</button></a><a href="#/catalog"><button>Kamera kataloğu</button></a></div></div>${ICON}</section>
-  <h2>Öne çıkan: ${esc(c.brand+' '+c.model)}</h2><p class="muted">${esc(c.category)} · ${c.era} · ${specs(c)}</p>
+  <h2>Öne çıkan: ${esc(c.brand+' '+c.model)}</h2><div class="feat-cam"><div class="sw art" style="background-color:${c.sw}">${CAMART[c.id]||''}</div><p class="muted">${esc(c.category)} · ${c.era} · ${specs(c)}</p></div>
   <h2>Son fotoğraflar</h2>${ph.length?grid(ph.slice(0,8)):'<p class="muted">Henüz fotoğraf yok. İlk karenizi çekin.</p>'}
   ${P.on?'':`<div class="note promo">${ic('star','fill')} <b>Premium</b> ile 2 GB arşiv, sınırsız albüm, kolleksiyon çerçeveleri ve PDF fotokitap. <a href="#/premium">İncele</a></div>`}`},
  '/catalog':()=>`<h1>Camera Catalog</h1><p class="muted">Tüm kameralar ücretsizdir.</p><div class="grid">${CAMERAS.map(camCard).join('')}</div>`,
