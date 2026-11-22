@@ -1,5 +1,5 @@
 # RETRO CAMERA
-*A moment from another time.* - Tarayıcı tabanlı retro kamera uygulaması. Statik HTML/CSS/JS, derleme gerekmez, harici kütüphane yok. PWA: ana ekrana eklenir, çevrimdışı çalışır.
+*A moment from another time.*. Tarayıcı tabanlı retro kamera uygulaması. Statik HTML/CSS/JS, derleme gerekmez, harici kütüphane yok. PWA: ana ekrana eklenir, çevrimdışı çalışır.
 
 ## Yayınlama
 GitHub Pages / Netlify / Cloudflare Pages: tüm dosyaları yükle. Kamera için HTTPS gerekir (hepsi HTTPS sunar).

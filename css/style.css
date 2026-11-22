@@ -51,7 +51,7 @@ button:hover:not(:disabled):not(.pri){border-color:var(--copper)}button.pri:hove
 .chip{min-height:36px;padding:6px 14px;font-size:14px;color:var(--ink);line-height:1.2}.chip:hover:not(.on){border-color:var(--copper)}
 .chips{gap:8px}.chips>.muted{margin-right:2px}
 .i{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em}.i.fill{fill:currentColor}
-.i.lk{width:.95em;height:.95em;margin-left:4px;opacity:.75}.i.ok{color:var(--copper);stroke-width:2.4}.i.hot{color:#e0584c}
+.i.lk{width:.95em;height:.95em;margin-left:4px;opacity:.75}.i.ok{color:var(--copper);stroke-width:2.4}.i.hot{color:#e0584c}.i.no{opacity:.4}
 button:not(.ph):not(.cam),.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .card h3{display:flex;align-items:center;gap:8px}.card h3 .i{color:var(--copper)}
 .pb .i{width:.95em;height:.95em;vertical-align:-.15em}.promo .i{color:var(--copper)}

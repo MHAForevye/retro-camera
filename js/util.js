@@ -1,4 +1,4 @@
-/* Bağımsız yardımcılar: ZIP (store) ve PDF (JPEG gömme) üreticileri — harici kütüphane yok. */
+/* Bağımsız yardımcılar: ZIP (store) ve PDF (JPEG gömme) üreticileri, harici kütüphane yok. */
 const crcT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=crcT[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
 async function makeZip(files){

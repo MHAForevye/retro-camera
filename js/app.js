@@ -8,7 +8,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const url=b=>{const u=URL.createObjectURL(b);urls.push(u);return u};
 const cam=id=>CAMERAS.find(c=>c.id===id)||CAMERAS[0];
 const fmt=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':n>1048576?(n/1048576).toFixed(1)+' MB':Math.round(n/1024)+' KB';
-/* SVG ikon seti (çizgi stili, currentColor — emoji yok) */
+/* SVG ikon seti (çizgi stili, currentColor, emoji yok) */
 const IC={lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',star:'<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
  heart:'<path d="M12 19.5s-7-4.3-7-9.6A4 4 0 0 1 12 7.4a4 4 0 0 1 7 2.5c0 5.3-7 9.6-7 9.6z"/>',book:'<path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5z"/><path d="M5 20.5A2.5 2.5 0 0 0 7.5 21H19v-3"/>',
  chevL:'<path d="M14.5 5.5L8 12l6.5 6.5"/>',chevR:'<path d="M9.5 5.5L16 12l-6.5 6.5"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',rec:'<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/>',
@@ -21,7 +21,7 @@ const specs=c=>[c.flash?'Flaşlı':'Flaşsız',c.frames?c.frames+' kare şerit':
 /* ---------- Bildirim ve diyalog ---------- */
 let tt;function toast(m,h){const t=$('#toast');t.textContent=m;t.className='show';t.onclick=h?()=>{location.hash=h;t.className=''}:null;clearTimeout(tt);tt=setTimeout(()=>t.className='',4200)}
 const ask=(t,v='')=>new Promise(ok=>{const d=$('#dlg');d.innerHTML=`<form method="dialog"><h3>${esc(t)}</h3><input id="dv" value="${esc(v)}" maxlength="40" autofocus><div class="row"><button class="pri" value="ok">Tamam</button><button value="no" formnovalidate>Vazgeç</button></div></form>`;d.onclose=()=>ok(d.returnValue==='ok'?$('#dv').value.trim():null);d.showModal()});
-const needPrem=f=>toast(f+' Premium özelliğidir — dokun ve incele.','#/premium');
+const needPrem=f=>toast(f+' Premium özelliğidir. Dokun ve incele.','#/premium');
 
 /* ---------- Premium durumu (yalnızca FOREVYE sunucusu; API yokken yalnızca gizli önizleme) ---------- */
 const P={on:false,exp:null,err:'',demo:LS.get('demo','0')==='1',ready:null,
@@ -31,7 +31,7 @@ const P={on:false,exp:null,err:'',demo:LS.get('demo','0')==='1',ready:null,
   const b=$('#pb');b.innerHTML=this.on?ic('star','fill')+' Premium':'Ücretsiz';b.className='pb'+(this.on?' on':'');return this.on},
  get mb(){return this.on?LIM.prem.mb:LIM.free.mb}};
 
-/* ---------- IndexedDB (özel yerel arşiv) — v2: blob'lar ayrı depoda, v1 verisi otomatik taşınır ---------- */
+/* ---------- IndexedDB (özel yerel arşiv), v2: blob'lar ayrı depoda, v1 verisi otomatik taşınır ---------- */
 const DB=(()=>{let d;const open=()=>d||(d=new Promise((ok,no)=>{const r=indexedDB.open('retrocam',2);
  r.onupgradeneeded=e=>{const db=r.result,t=r.transaction;
   if(e.oldVersion<1){db.createObjectStore('photos',{keyPath:'id'});db.createObjectStore('albums',{keyPath:'id'})}
@@ -98,7 +98,7 @@ const grid=(l)=>`<div class="grid">${l.map(p=>`<button class="ph${p.fav?' f':''}
 function camCard(c){return`<button class="card cam ${c.id===sel?'sel':''}" data-cam="${c.id}"><div class="sw art" style="background-color:${c.sw}">${CAMART[c.id]||''}</div><h3>${esc(c.brand+' '+c.model)}</h3><small>${esc(c.category)} · ${c.era}</small><small class="sp">${specs(c)}</small></button>`}
 const routes={
  '/':async()=>{const ph=(await DB.all('photos')).sort((a,b)=>b.at-a.at),c=cam(sel);
-  return`<section class="hero"><div><h1>A moment from another time.</h1><p>Bir kamera seç, çek; kameranın sabit karakteri baskıya dönüşsün. Ayar yok, filtre yok — sadece o kameranın görünümü.</p>
+  return`<section class="hero"><div><h1>A moment from another time.</h1><p>Bir kamera seç, çek; kameranın sabit karakteri baskıya dönüşsün. Ayar yok, filtre yok, sadece o kameranın görünümü.</p>
   <div class="row"><a href="#/camera"><button class="pri">Hızlı çekim</button></a><a href="#/catalog"><button>Kamera kataloğu</button></a></div></div>${ICON}</section>
   <h2>Öne çıkan: ${esc(c.brand+' '+c.model)}</h2><div class="feat-cam"><div class="sw art" style="background-color:${c.sw}">${CAMART[c.id]||''}</div><p class="muted">${esc(c.category)} · ${c.era} · ${specs(c)}</p></div>
   <h2>Son fotoğraflar</h2>${ph.length?grid(ph.slice(0,8)):'<p class="muted">Henüz fotoğraf yok. İlk karenizi çekin.</p>'}
@@ -125,19 +125,19 @@ const routes={
   let q='';try{const e=await navigator.storage.estimate();q=`<p class="muted">Tarayıcı kotası: ${fmt(e.usage)} / ${fmt(e.quota)}</p>`}catch{}
   const pct=Math.min(100,used/lim*100);
   return`<h1>My Archive</h1><div class="card"><b>${ph.length} fotoğraf</b> · ${fmt(used)} / ${P.on?'2 GB (Extended Archive)':LIM.free.mb+' MB'}<div class="bar ${pct>85?'warn':''}"><i style="width:${pct}%"></i></div>${q}
-  <p class="muted">${CAMERAS.map(c=>[c,ph.filter(p=>p.cam===c.id).length]).filter(x=>x[1]).map(x=>esc(x[0].model)+': '+x[1]).join(' · ')||'—'}</p></div>
+  <p class="muted">${CAMERAS.map(c=>[c,ph.filter(p=>p.cam===c.id).length]).filter(x=>x[1]).map(x=>esc(x[0].model)+': '+x[1]).join(' · ')||'Henüz fotoğraf yok'}</p></div>
   ${P.on?'':'<div class="note promo" style="margin-top:12px">Alan dolarsa Extended Archive ile 2 GB’a çık. <a href="#/premium">Premium</a></div>'}
   <p class="note" style="margin-top:12px">Fotoğraflar bu cihazda özel olarak saklanır. Bulut arşivi FOREVYE/arka uç bağlantısı gerektirir. Düzenli yedek için ZIP indir.</p>
   <div class="row"><button class="pri" id="exp" ${ph.length?'':'disabled'}>Tümünü ZIP olarak indir</button></div>`},
  '/premium':async()=>{let body;
   if(!FOREVYE.configured)body=`<p class="note">FOREVYE merkezi servisi bağlı değil. Kristal bakiyesi ve premium yetkisi yerelde üretilmez; <code>js/forevye-adapter.js</code> içindeki <code>API_BASE</code> ayarlanınca paketler ve fiyatlar sunucudan okunur.</p>`;
   else try{const c=await FOREVYE.catalog();body=`<div class="grid">${c.map(p=>`<div class="card"><h3>${p.duration_hours/24} Günlük Premium</h3><p>${p.duration_hours} saat · ${p.crystal_price} kristal</p><button class="pri buy" data-c="${esc(p.package_code)}">Kristalle etkinleştir</button></div>`).join('')}</div>`}catch(e){body=`<p class="note">${esc(e.message)}</p>${e.status===401?'<button id="fv2">FOREVYE’yi bağla</button>':''}`}
-  const CK=ic('check','ok'),row=(a,b,c)=>`<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
+  const CK=ic('check','ok'),NO=ic('close','no'),row=(a,b,c)=>`<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
   return`<h1>Premium</h1><p>3 günlük ve 7 günlük süreli erişim; yalnızca kristal ile, otomatik yenilenmez. Kamera modelleri ve temel çekim her zaman ücretsiz.</p>
   <div class="card ${P.on?'okc':''}"><b>${P.on?ic('star','fill')+' Premium aktif':'Premium aktif değil'}</b>${P.exp?`<p class="muted">Bitiş: ${new Date(P.exp).toLocaleString('tr-TR')}</p>`:''}${P.err?`<p class="muted">${esc(P.err)}</p>`:''}</div>
   <div class="grid feat"><div class="card"><h3>${ic('stack')} Premium Albums</h3><small>Sınırsız albüm, albüm kapağı seçimi, albüm kartları.</small></div><div class="card"><h3>${ic('disk')} Extended Archive</h3><small>200 MB yerine 2 GB cihaz arşivi.</small></div>
   <div class="card"><h3>${ic('frame')} Premium Collections</h3><small>Film şeridi, siyah pasparto ve tarih damgası çerçeveleri.</small></div><div class="card"><h3>${ic('book')} Photo Book</h3><small>Fotoğraf veya albümünüzden A4 PDF fotokitap.</small></div></div>
-  <div class="tw"><table class="tbl"><tr><th></th><th>Ücretsiz</th><th>Premium</th></tr>${row('Tüm kameralar',CK,CK)}${row('Arşiv alanı','200 MB','2 GB')}${row('Albüm sayısı','3','Sınırsız + kapak')}${row('Çerçeveler','Klasik','Klasik + 3 kolleksiyon')}${row('Fotokitap (PDF)','—',CK)}${row('ZIP yedek, paylaş, favoriler',CK,CK)}</table></div>
+  <div class="tw"><table class="tbl"><tr><th></th><th>Ücretsiz</th><th>Premium</th></tr>${row('Tüm kameralar',CK,CK)}${row('Arşiv alanı','200 MB','2 GB')}${row('Albüm sayısı','3','Sınırsız + kapak')}${row('Çerçeveler','Klasik','Klasik + 3 kolleksiyon')}${row('Fotokitap (PDF)',NO,CK)}${row('ZIP yedek, paylaş, favoriler',CK,CK)}</table></div>
   <h2>Paketler</h2>${body}<p class="muted">Premium bitince fotoğraflar silinmez; sadece premium özellikler kapanır ve yeni kayıt sınırları ücretsiz seviyeye döner.</p>`},
  '/settings':()=>{const demo=/demo/.test(location.hash)&&!FOREVYE.configured;
   return`<h1>Profile / Settings</h1><div class="card"><h3>FOREVYE hesabı</h3><p class="muted">İsteğe bağlı. Şifren bu uygulamaya girilmez; güvenli yetkilendirme sayfasına yönlendirilirsin.</p><button id="fv">FOREVYE'yi bağla</button></div>

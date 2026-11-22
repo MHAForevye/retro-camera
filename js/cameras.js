@@ -1,4 +1,4 @@
-/* Sabit kamera profilleri — yalnızca ürün ekibi değiştirir. Kullanıcı arayüzünde ayar yoktur.
+/* Sabit kamera profilleri: yalnızca ürün ekibi değiştirir. Kullanıcı arayüzünde ayar yoktur.
    Tüm modeller ücretsizdir (is_free: true). Marka adları özgündür; gerçek model adı kullanılacaksa doğrulayın. */
 const CAMERAS=[
 {id:'cd-2003',brand:'Sunny',model:'Compact D3',era:'2003',category:'Compact Digital',version:1,layout:'white',aspect:4/3,flash:true,is_free:true,sw:'#cfd8e0',
