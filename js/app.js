@@ -23,14 +23,21 @@ let tt;function toast(m,h){const t=$('#toast');t.textContent=m;t.className='show
 const ask=(t,v='')=>new Promise(ok=>{const d=$('#dlg');d.innerHTML=`<form method="dialog"><h3>${esc(t)}</h3><input id="dv" value="${esc(v)}" maxlength="40" autofocus><div class="row"><button class="pri" value="ok">Tamam</button><button value="no" formnovalidate>Vazgeç</button></div></form>`;d.onclose=()=>ok(d.returnValue==='ok'?$('#dv').value.trim():null);d.showModal()});
 const needPrem=f=>toast(f+' Premium özelliğidir. Dokun ve incele.','#/premium');
 
-/* ---------- Premium durumu (yalnızca FOREVYE sunucusu; API yokken yalnızca gizli önizleme) ---------- */
-const P={on:false,exp:null,err:'',demo:LS.get('demo','0')==='1',ready:null,
- async load(){this.on=false;this.exp=null;this.err='';
-  if(FOREVYE.configured){try{const s=await FOREVYE.status();this.on=!!(s.active??s.premium_active??s.is_premium);this.exp=s.expires_at||s.expires||null}catch(e){this.err=e.message}}
-  else this.on=this.demo;
+/* ---------- Premium durumu (kod ile: Nexus Pass'ten kristalle alınan kod sunucuda doğrulanır, js/pass.js) ---------- */
+const P={on:false,exp:null,ready:null,
+ async load(){this.on=RP.on();this.exp=this.on?RP.expiry():null;
   const b=$('#pb');b.innerHTML=this.on?ic('star','fill')+' Premium':'Ücretsiz';b.className='pb'+(this.on?' on':'');return this.on},
  get mb(){return this.on?LIM.prem.mb:LIM.free.mb}};
 
+const PERR={invalid_code:'Kod geçersiz. Harfleri kontrol et.',used:'Bu kod en fazla 2 cihazda kullanılabilir; limit dolu.',expired:'Bu kodun süresi dolmuş.',wrong_app:'Bu kod Retro Camera için değil.',rate_limited:'Çok fazla deneme. Biraz sonra tekrar dene.',net:'Sunucuya ulaşılamadı. İnternetini kontrol edip tekrar dene.'};
+const leftTxt=ms=>{const d=ms/864e5|0,h=ms%864e5/36e5|0,m=Math.max(1,Math.ceil(ms%36e5/6e4));return d?`${d} gün ${h} sa`:h?`${h} sa ${m} dk`:`${m} dk`};
+/* Nexus Pass'teki "Retro Camera'da aç" bağlantısı kodu #kod= ile getirir: oku, adresten sil, kendiliğinden etkinleştir */
+async function takeCode(){
+ const m=/(?:^#|&)kod=([^&]+)/.exec(location.hash);if(!m)return;let c='';try{c=decodeURIComponent(m[1])}catch{}
+ window.history.replaceState(null,'',location.pathname+location.search+'#/premium');   // kod adreste ve geçmişte kalmasın
+ await P.ready;const r=await RP.redeem(c);
+ if(r.ok){P.ready=P.load();await P.ready;toast('Premium etkinleşti')}else toast(PERR[r.error]||PERR.net);
+ render()}
 /* ---------- IndexedDB (özel yerel arşiv), v2: blob'lar ayrı depoda, v1 verisi otomatik taşınır ---------- */
 const DB=(()=>{let d;const open=()=>d||(d=new Promise((ok,no)=>{const r=indexedDB.open('retrocam',2);
  r.onupgradeneeded=e=>{const db=r.result,t=r.transaction;
@@ -127,22 +134,22 @@ const routes={
   return`<h1>My Archive</h1><div class="card"><b>${ph.length} fotoğraf</b> · ${fmt(used)} / ${P.on?'2 GB (Extended Archive)':LIM.free.mb+' MB'}<div class="bar ${pct>85?'warn':''}"><i style="width:${pct}%"></i></div>${q}
   <p class="muted">${CAMERAS.map(c=>[c,ph.filter(p=>p.cam===c.id).length]).filter(x=>x[1]).map(x=>esc(x[0].model)+': '+x[1]).join(' · ')||'Henüz fotoğraf yok'}</p></div>
   ${P.on?'':'<div class="note promo" style="margin-top:12px">Alan dolarsa Extended Archive ile 2 GB’a çık. <a href="#/premium">Premium</a></div>'}
-  <p class="note" style="margin-top:12px">Fotoğraflar bu cihazda özel olarak saklanır. Bulut arşivi FOREVYE/arka uç bağlantısı gerektirir. Düzenli yedek için ZIP indir.</p>
+  <p class="note" style="margin-top:12px">Fotoğraflar bu cihazda özel olarak saklanır. Bulut arşivi sunucu bağlantısı gerektirir. Düzenli yedek için ZIP indir.</p>
   <div class="row"><button class="pri" id="exp" ${ph.length?'':'disabled'}>Tümünü ZIP olarak indir</button></div>`},
- '/premium':async()=>{let body;
-  if(!FOREVYE.configured)body=`<p class="note">FOREVYE merkezi servisi bağlı değil. Kristal bakiyesi ve premium yetkisi yerelde üretilmez; <code>js/forevye-adapter.js</code> içindeki <code>API_BASE</code> ayarlanınca paketler ve fiyatlar sunucudan okunur.</p>`;
-  else try{const c=await FOREVYE.catalog();body=`<div class="grid">${c.map(p=>`<div class="card"><h3>${p.duration_hours/24} Günlük Premium</h3><p>${p.duration_hours} saat · ${p.crystal_price} kristal</p><button class="pri buy" data-c="${esc(p.package_code)}">Kristalle etkinleştir</button></div>`).join('')}</div>`}catch(e){body=`<p class="note">${esc(e.message)}</p>${e.status===401?'<button id="fv2">FOREVYE’yi bağla</button>':''}`}
+ '/premium':async()=>{
   const CK=ic('check','ok'),NO=ic('close','no'),row=(a,b,c)=>`<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
   return`<h1>Premium</h1><p>3 günlük ve 7 günlük süreli erişim; yalnızca kristal ile, otomatik yenilenmez. Kamera modelleri ve temel çekim her zaman ücretsiz.</p>
-  <div class="card ${P.on?'okc':''}"><b>${P.on?ic('star','fill')+' Premium aktif':'Premium aktif değil'}</b>${P.exp?`<p class="muted">Bitiş: ${new Date(P.exp).toLocaleString('tr-TR')}</p>`:''}${P.err?`<p class="muted">${esc(P.err)}</p>`:''}</div>
+  <div class="card ${P.on?'okc':''}"><b>${P.on?ic('star','fill')+' Premium aktif':'Premium aktif değil'}</b>${P.exp?`<p class="muted">Bitiş: ${new Date(P.exp).toLocaleString('tr-TR')} · ${leftTxt(P.exp-Date.now())} kaldı</p>`:''}</div>
   <div class="grid feat"><div class="card"><h3>${ic('stack')} Premium Albums</h3><small>Sınırsız albüm, albüm kapağı seçimi, albüm kartları.</small></div><div class="card"><h3>${ic('disk')} Extended Archive</h3><small>200 MB yerine 2 GB cihaz arşivi.</small></div>
   <div class="card"><h3>${ic('frame')} Premium Collections</h3><small>Film şeridi, siyah pasparto ve tarih damgası çerçeveleri.</small></div><div class="card"><h3>${ic('book')} Photo Book</h3><small>Fotoğraf veya albümünüzden A4 PDF fotokitap.</small></div></div>
   <div class="tw"><table class="tbl"><tr><th></th><th>Ücretsiz</th><th>Premium</th></tr>${row('Tüm kameralar',CK,CK)}${row('Arşiv alanı','200 MB','2 GB')}${row('Albüm sayısı','3','Sınırsız + kapak')}${row('Çerçeveler','Klasik','Klasik + 3 kolleksiyon')}${row('Fotokitap (PDF)',NO,CK)}${row('ZIP yedek, paylaş, favoriler',CK,CK)}</table></div>
-  <h2>Paketler</h2>${body}<p class="muted">Premium bitince fotoğraflar silinmez; sadece premium özellikler kapanır ve yeni kayıt sınırları ücretsiz seviyeye döner.</p>`},
- '/settings':()=>{const demo=/demo/.test(location.hash)&&!FOREVYE.configured;
-  return`<h1>Profile / Settings</h1><div class="card"><h3>FOREVYE hesabı</h3><p class="muted">İsteğe bağlı. Şifren bu uygulamaya girilmez; güvenli yetkilendirme sayfasına yönlendirilirsin.</p><button id="fv">FOREVYE'yi bağla</button></div>
+  <h2>Kod ile etkinleştir</h2><div class="card"><p class="muted">Nexus Pass’te kristalle 3 ya da 7 günlük Retro Camera kodu al, buraya gir. Süre, kodu ilk kullandığın anda başlar; kod en fazla 2 cihazda çalışır.</p>
+  <div class="row"><input id="pcode" placeholder="ABCD-EFGH-JKLMN" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" aria-label="Premium kodu" style="flex:1;min-width:0"><button class="pri" id="predeem">Kodu gir</button></div>
+  <p class="muted" id="pmsg" role="status"></p><a href="${RP.MARKET}" target="_blank" rel="noopener">Nexus Pass’ten kod al</a></div>
+  <p class="muted">Premium bitince fotoğraflar silinmez; sadece premium özellikler kapanır ve yeni kayıt sınırları ücretsiz seviyeye döner.</p>`},
+ '/settings':()=>{
+  return`<h1>Profile / Settings</h1>
   <div class="card" style="margin-top:12px"><h3>Deneyim</h3><label class="row"><input type="checkbox" id="sn" ${snd?'checked':''}> Deklanşör sesi</label>${inst?'<button id="ins">Uygulamayı ana ekrana ekle</button>':'<p class="muted">Tarayıcı menüsünden “Ana ekrana ekle” ile uygulama gibi kurabilirsin; çevrimdışı çalışır.</p>'}</div>
-  ${demo?`<div class="card" style="margin-top:12px"><h3>Satış önizlemesi</h3><p class="muted">Premium özellikleri bu cihazda dener. Gerçek satın alma değildir; API_BASE tanımlanınca devre dışı kalır.</p><label class="row"><input type="checkbox" id="dm" ${P.demo?'checked':''}> Premium önizleme</label></div>`:''}
   <div class="card" style="margin-top:12px"><h3>Gizlilik</h3><p class="muted">Fotoğraflar varsayılan olarak özeldir ve bu cihazda tutulur; hiçbir yere gönderilmez. Paylaşım, cihazının kendi paylaşım menüsüyle yapılır. Bağlantı ile paylaşım sunucu (Faz 3) gerektirir.</p></div>
   <div class="card" style="margin-top:12px"><h3>Veri</h3><button id="wipe">Tüm yerel verileri sil</button></div>`}
 };
@@ -159,6 +166,9 @@ addEventListener('hashchange',render);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst=e});
 if('serviceWorker'in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 P.ready=P.load();render();
+addEventListener('rp:change',()=>{P.ready=P.load();P.ready.then(()=>{if(!$('#pcode')||!$('#pcode').value)render()})});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')RP.verify()});RP.verify();
+takeCode();
 
 function bind(path){
  document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=()=>{sel=b.dataset.cam;LS.set('cam',sel);
@@ -178,14 +188,15 @@ function bind(path){
    for(const[i,p]of ps.entries()){const x=await DB.get('blobs',p.id);if(x)files.push({name:`retro-${p.cam}-${new Date(p.at).toISOString().slice(0,10)}-${i+1}.jpg`,blob:x.blob})}
    dl(await makeZip(files),'retro-camera-yedek.zip');toast('ZIP indirildi')}catch(er){toast('Dışa aktarma başarısız: '+er.message)}
   b.disabled=false;b.textContent='Tümünü ZIP olarak indir'};
- if(path==='/premium'){document.querySelectorAll('.buy').forEach(b=>b.onclick=async()=>{b.disabled=true;
-   try{await FOREVYE.purchase(b.dataset.c);P.ready=P.load();await P.ready;toast('Premium etkinleştirildi');render()}catch(e){toast(e.message)}b.disabled=false});
-  const f=$('#fv2');if(f)f.onclick=()=>FOREVYE.connect()}
- if(path==='/settings'){$('#fv').onclick=()=>{try{FOREVYE.connect()}catch(e){toast(e.message)}};
+ if(path==='/premium'){const pc=$('#pcode');
+  pc.oninput=()=>{pc.value=pc.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')};pc.onkeydown=e=>{if(e.key==='Enter')$('#predeem').click()};
+  $('#predeem').onclick=async()=>{const b=$('#predeem'),m=$('#pmsg');b.disabled=true;m.textContent='Kontrol ediliyor…';
+   const r=await RP.redeem(pc.value);b.disabled=false;
+   if(r.ok){P.ready=P.load();await P.ready;toast('Premium etkinleşti');render()}else m.textContent=PERR[r.error]||PERR.net}}
+ if(path==='/settings'){
   $('#sn').onchange=e=>{snd=e.target.checked;LS.set('snd',snd?'1':'0')};
   const i=$('#ins');if(i)i.onclick=async()=>{inst.prompt();await inst.userChoice;inst=null;render()};
-  const d=$('#dm');if(d)d.onchange=async e=>{P.demo=e.target.checked;LS.set('demo',P.demo?'1':'0');P.ready=P.load();await P.ready;toast(P.demo?'Premium önizleme açık':'Önizleme kapalı')};
-  $('#wipe').onclick=async()=>{if(!confirm('Tüm fotoğraflar ve albümler silinecek. Emin misin?'))return;await DB.wipe();['cam','frame','timer','snd','demo'].forEach(LS.del);P.demo=false;P.ready=P.load();toast('Tüm yerel veriler silindi.');render()}}}
+  $('#wipe').onclick=async()=>{if(!confirm('Tüm fotoğraflar ve albümler silinecek. Emin misin?'))return;await DB.wipe();['cam','frame','timer','snd'].forEach(LS.del);P.ready=P.load();toast('Tüm yerel veriler silindi.');render()}}}
 
 function bindCamera(){
  const msg=$('#msg'),vid=$('#vid'),st=$('#stage');st.style.aspectRatio=cam(sel).aspect;

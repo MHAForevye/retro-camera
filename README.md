@@ -17,17 +17,20 @@ GitHub Pages / Netlify / Cloudflare Pages: tüm dosyaları yükle. Kamera için 
 - **Photo Book:** albüm/fotoğraflardan A4 PDF fotokitap (en fazla 60 foto)
 - Premium bitince fotoğraflar silinmez; yalnızca yeni kayıt sınırları ücretsiz seviyeye döner.
 
-## FOREVYE bağlantısı
-`js/forevye-adapter.js` içinde `API_BASE` doldur. Beklenen uçlar:
-`GET /api/premium/catalog`, `GET /api/premium/status` → `{active, expires_at}`, `POST /api/premium/purchase` (Idempotency-Key ile).
-`API_BASE` boşken satın alma kapalıdır; yerelde bakiye/premium üretilmez.
+## Premium üyelik (kod ile)
+Premium, Nexus Pass'ten kristalle alınan koda bağlıdır; hesap gerekmez.
+1. Kullanıcı Nexus Pass → Keşfet → Retro Camera bölümünden 3 ya da 7 günlük kodu kristalle alır.
+2. Satın alma sonrası **"Retro Camera'da aç"** düğmesi `<uygulama>/#kod=XXXX-XXXX-XXXXX` bağlantısını açar; uygulama kodu adresten siler ve kendiliğinden etkinleştirir. Elle girmek için Premium sayfasındaki kod alanı da var.
+3. `js/pass.js` kodu sunucuya gönderir (`POST /api/retro/redeem`, `{code, app:'retro', device, v:1}`), dönen bitiş tarihini cihazda saklar, günde bir `verify` ile teyit eder. İnternet yokken son bilinen süre bitene kadar geçerli kalır; saat geri alınarak süre uzatılamaz.
+4. Süre bitince fotoğraflar silinmez; yalnızca premium özellikler kapanır ve yeni kayıt sınırları ücretsiz seviyeye döner.
 
-**Satış önizlemesi:** `API_BASE` boşken `#/settings?demo` adresinde gizli bir "Premium önizleme" anahtarı çıkar (yalnızca müşteriye özellikleri göstermek için). API bağlanınca otomatik devre dışı kalır.
+Sunucu tarafı (ürün tanımı, `redeem`/`verify` uçları, CORS) için `SUNUCU.md` dosyasına bak. Kod tarafı doğrulaması esastır; uygulamadaki kontrol yalnızca görünüm içindir.
 
 ## Teknik notlar
 - Veri: IndexedDB v2 (blob'lar ayrı depoda). v1 verisi ilk açılışta otomatik taşınır.
 - Limitler `js/app.js` başında `LIM`, çerçeveler `FRAMES`; kamera profilleri `js/cameras.js`.
 - Sürüm önbelleği: `sw.js` içindeki `V` değerini her yayında artır.
+- Üyelik adresleri (`API`, `MARKET`) `js/pass.js` başındadır.
 
 ## Sonraki adımlar (arka uç gerektirir)
-Token tabanlı paylaşım bağlantıları, bulut arşivi, FOREVYE Auth/Wallet/Ledger/Entitlement (Cloudflare Workers + D1 + R2).
+Token tabanlı paylaşım bağlantıları, bulut arşivi, hesaplı üyelik (Nexus entitlement) (Cloudflare Workers + D1 + R2).
