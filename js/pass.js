@@ -22,8 +22,24 @@
     if (!/^[a-f0-9]{32}$/.test(d || '')) { const a = new Uint8Array(16); crypto.getRandomValues(a); d = [...a].map(b => b.toString(16).padStart(2, '0')).join(''); ls.set(KD, d); }
     return d;
   }
-  const expiry = () => list.reduce((m, x) => x.e > now() && x.e > m ? x.e : m, 0);
+  const expiry = () => Math.max(accountExp>now()?accountExp:0,list.reduce((m, x) => x.e > now() && x.e > m ? x.e : m, 0));
   const on = () => expiry() > 0;
+  let accountExp=0, accountPlan='free';
+  async function syncAccountSubscription(){
+    try{
+      await window.KR?.ready?.();
+      const pair=window.KR?.creds?.(); if(!pair)return;
+      const r=await fetch('https://mikroklimakontrolmerkezi.forevye.workers.dev/api/subscriptions/state',{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+pair.id+'.'+pair.token},
+        body:'{}',cache:'no-store'
+      });
+      if(!r.ok)return;
+      const j=await r.json(), rows=(j.subscriptions||[]).filter(x=>x.app==='retro'&&x.active);
+      if(rows.length){rows.sort((a,b)=>b.expires_at-a.expires_at);accountExp=rows[0].expires_at*1000;accountPlan=rows[0].tier;}
+      else {accountExp=0;accountPlan='free';}
+      emit();
+    }catch(_){}
+  }
   let sig = expiry();
   const emit = () => { const s = expiry(); if (s !== sig) { sig = s; g.dispatchEvent(new Event('rp:change')); } };
   async function call(path, code) {                            // ağ/sunucu hatası ile kod hatasını ayır
@@ -55,5 +71,6 @@
     prune(); store(); emit();
   }
   setInterval(() => { prune(); emit(); }, 3e4);
-  g.RP = { on, expiry, redeem, verify, norm, MARKET };
+  g.RP = { on, expiry, redeem, verify, norm, MARKET, syncAccountSubscription };
+  syncAccountSubscription();
 })(window);
